@@ -6,5 +6,5 @@ import 'package:flutter/material.dart';
 import 'package:go_to_wark/screen/home_screen.dart';
 
 void main() {
-  runApp(MaterialApp(home: Scaffold(body: HomeScreen())));
+  runApp(MaterialApp(home: HomeScreen()));
 }
