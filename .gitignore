@@ -1,5 +1,6 @@
 *.swift
 **/*.swift
+*/app/src/main/AndroidManifest.xml
 
 # Miscellaneous
 *.class
