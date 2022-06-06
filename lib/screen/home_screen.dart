@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,13 +22,36 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar:renderAppBar(),
       body: Column(children: [
-        Expanded(
-          flex: 2,
-          child: _CustomGoogleMap(inittialCameraPosition: inittialCameraPosition),
-        ),
-        Expanded(flex: 1, child: _ChollCheck())
+        _CustomGoogleMap(inittialCameraPosition: inittialCameraPosition),
+        _ChollCheck()
       ]),
     );
+  }
+
+  Future<String> checkPermission() async {
+    final isLocationEnable = await Geolocator.isLocationServiceEnabled();
+
+    if(!isLocationEnable){
+      return '위치 서비스를 활성화 해주세요';
+    }
+
+    LocationPermission checkPermission = await Geolocator.checkPermission();
+
+    // denied면 요청
+    if(checkPermission == LocationPermission.denied){
+      checkPermission = await Geolocator.requestPermission();
+
+      if(checkPermission == LocationPermission.denied){
+        return '위치 권한을 허가해주세요.';
+      }
+    }
+
+    if(checkPermission == LocationPermission.deniedForever){
+      return '앱의 위치 권한을 설정에서 허가해주세요.';
+    }
+
+    // always, whileInUse
+    return '위치 권한이 허가되었습니다.';
   }
 }
 
@@ -38,7 +62,7 @@ class _ChollCheck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text('출근');
+    return Expanded(flex: 1,child: Text('출근'));
   }
 }
 
@@ -52,9 +76,12 @@ class _CustomGoogleMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
-        mapType: MapType.normal,
-        initialCameraPosition: inittialCameraPosition);
+    return Expanded(
+      flex: 2,
+      child: GoogleMap(
+          mapType: MapType.normal,
+          initialCameraPosition: inittialCameraPosition),
+    );
   }
 }
 
