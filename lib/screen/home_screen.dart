@@ -14,8 +14,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static final LatLng currentLatlng =
       LatLng(36.325256195490816, 127.4197022192119);
+  static final LatLng destinationLatlng =
+      LatLng(36.31535619547721, 127.4197022191111);
   static final CameraPosition inittialCameraPosition =
       CameraPosition(target: currentLatlng, zoom: 15);
+  static final double distance = 100;
+
+  static final Circle withDistance = Circle(
+    // 서클의 고유번호
+    circleId: CircleId('withDistance'),
+    // 서클의 위치
+    center: destinationLatlng,
+    // 서클 색
+    fillColor: Colors.blueAccent.withOpacity(0.5),
+    radius: distance,
+    // 서클의 경게 색
+    strokeColor: Colors.blue,
+    // 경계 두께
+    strokeWidth: 1,
+  );
+
+  static final Circle notWithDistanceCircle = Circle(
+    // 서클의 고유번호
+    circleId: CircleId('notWithDistanceCircle'),
+    // 서클의 위치
+    center: destinationLatlng,
+    // 서클 색
+    fillColor: Colors.redAccent.withOpacity(0.5),
+    radius: distance,
+    // 서클의 경게 색
+    strokeColor: Colors.red,
+    // 경계 두께
+    strokeWidth: 1,
+  );
+
+  static final Circle checkDoneCircle = Circle(
+    // 서클의 고유번호
+    circleId: CircleId('checkDoneCircle'),
+    // 서클의 위치
+    center: destinationLatlng,
+    // 서클 색
+    fillColor: Colors.greenAccent.withOpacity(0.5),
+    radius: distance,
+    // 서클의 경게 색
+    strokeColor: Colors.green,
+    // 경계 두께
+    strokeWidth: 1,
+  );
+
+  static final Marker marker =
+      Marker(markerId: MarkerId('markerId'), position: currentLatlng);
 
   @override
   Widget build(BuildContext context) {
@@ -36,10 +84,13 @@ class _HomeScreenState extends State<HomeScreen> {
           print(snapshot.connectionState);
           if (snapshot.data == '위치 권한이 허가되었습니다.') {
             return Column(children: [
-              _CustomGoogleMap(inittialCameraPosition: inittialCameraPosition),
+              _CustomGoogleMap(
+                  inittialCameraPosition: inittialCameraPosition,
+                  circle: withDistance,
+                  marker: marker),
               _ChollCheck()
             ]);
-          }else{
+          } else {
             return Center(
               child: Text(snapshot.data.toString()),
             );
@@ -88,9 +139,14 @@ class _ChollCheck extends StatelessWidget {
 }
 
 class _CustomGoogleMap extends StatelessWidget {
+  final Circle circle;
+  final Marker marker;
+
   const _CustomGoogleMap({
     Key? key,
     required this.inittialCameraPosition,
+    required this.circle,
+    required this.marker,
   }) : super(key: key);
 
   final CameraPosition inittialCameraPosition;
@@ -100,8 +156,16 @@ class _CustomGoogleMap extends StatelessWidget {
     return Expanded(
       flex: 2,
       child: GoogleMap(
-          mapType: MapType.normal,
-          initialCameraPosition: inittialCameraPosition),
+        mapType: MapType.normal,
+        initialCameraPosition: inittialCameraPosition,
+        // 내위치 아이콘
+        myLocationEnabled: true,
+        // 내위치로 돌아가는 floating button
+        myLocationButtonEnabled: false,
+        // 여기서 원의 고유번호
+        circles: Set.from([circle]),
+        markers: Set.from([marker]),
+      ),
     );
   }
 }
