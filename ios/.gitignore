@@ -1,4 +1,5 @@
-*.swift
+**/*.swift
+Runner/AppDelegate.*
 
 **/dgph
 *.mode1v3

@@ -1,4 +1,5 @@
 *.swift
+**/*.swift
 
 # Miscellaneous
 *.class
