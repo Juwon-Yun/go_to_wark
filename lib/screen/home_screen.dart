@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+class LatLong {
+  final double latitude;
+  final double longitude;
+
+  LatLong({required this.latitude,required this.longitude});
+
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -15,10 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
   static final LatLng currentLatlng =
       LatLng(36.325256195490816, 127.4197022192119);
   static final LatLng destinationLatlng =
-      LatLng(36.31535619547721, 127.4197022191111);
+      LatLng(36.31795619547721, 127.4197022191111);
   static final CameraPosition inittialCameraPosition =
       CameraPosition(target: currentLatlng, zoom: 15);
-  static final double distance = 100;
+  static final double correctDistance = 100;
 
   static final Circle withDistance = Circle(
     // 서클의 고유번호
@@ -27,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     center: destinationLatlng,
     // 서클 색
     fillColor: Colors.blueAccent.withOpacity(0.5),
-    radius: distance,
+    radius: correctDistance,
     // 서클의 경게 색
     strokeColor: Colors.blue,
     // 경계 두께
@@ -41,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     center: destinationLatlng,
     // 서클 색
     fillColor: Colors.redAccent.withOpacity(0.5),
-    radius: distance,
+    radius: correctDistance,
     // 서클의 경게 색
     strokeColor: Colors.red,
     // 경계 두께
@@ -55,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
     center: destinationLatlng,
     // 서클 색
     fillColor: Colors.greenAccent.withOpacity(0.5),
-    radius: distance,
+    radius: correctDistance,
     // 서클의 경게 색
     strokeColor: Colors.green,
     // 경계 두께
@@ -63,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   static final Marker marker =
-      Marker(markerId: MarkerId('markerId'), position: currentLatlng);
+      Marker(markerId: MarkerId('markerId'), position: destinationLatlng);
 
   @override
   Widget build(BuildContext context) {
@@ -84,10 +92,39 @@ class _HomeScreenState extends State<HomeScreen> {
           print(snapshot.connectionState);
           if (snapshot.data == '위치 권한이 허가되었습니다.') {
             return Column(children: [
-              _CustomGoogleMap(
-                  inittialCameraPosition: inittialCameraPosition,
-                  circle: withDistance,
-                  marker: marker),
+              StreamBuilder<Position>(
+                // 권한을 받았기 때문에 위치를 가져옴
+                stream: Geolocator.getPositionStream(),
+                builder: (context, snapshot) {
+                  // 위치가 바뀔때 마다 화면을 재렌더링한다
+                  print('streamBuilder =>  ${snapshot.data}');
+
+                  bool isWithinRange = false;
+
+                  if (snapshot.hasData) {
+                    // 내위치를 position으로 표현한게 start
+                    final start = snapshot.data;
+                    final end = destinationLatlng;
+
+                    final distance = Geolocator.distanceBetween(
+                        start!.latitude, start.longitude, end.latitude, end.longitude);
+
+                    print(distance);
+
+                    // 100m 안에있다면 true
+                    if(distance < correctDistance){
+                      isWithinRange = true;
+                    }
+                  }
+
+
+                  return _CustomGoogleMap(
+                      inittialCameraPosition: inittialCameraPosition,
+                      // 출근할 거리에 따라서 다른원 출력
+                      circle: isWithinRange ? withDistance : notWithDistanceCircle,
+                      marker: marker);
+                }
+              ),
               _ChollCheck()
             ]);
           } else {
