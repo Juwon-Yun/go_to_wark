@@ -10,19 +10,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool choolCheckDone = false;
+
   // latitude - 위도, longitude - 경도
 
   static final LatLng currentLatlng =
-      LatLng(36.325256195490816, 127.4197022192119);
+      const LatLng(36.325256195490816, 127.4197022192119);
   static final LatLng destinationLatlng =
-      LatLng(36.31795619547721, 127.4197022191111);
+      const LatLng(36.31795619547721, 127.4197022191111);
   static final CameraPosition initialCameraPosition =
       CameraPosition(target: currentLatlng, zoom: 15);
   static final double correctDistance = 100;
 
   static final Circle withDistance = Circle(
     // 서클의 고유번호
-    circleId: CircleId('withDistance'),
+    circleId: const CircleId('withDistance'),
     // 서클의 위치
     center: destinationLatlng,
     // 서클 색
@@ -35,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   static final Circle notWithDistanceCircle = Circle(
-    circleId: CircleId('notWithDistanceCircle'),
+    circleId: const CircleId('notWithDistanceCircle'),
     center: destinationLatlng,
     fillColor: Colors.redAccent.withOpacity(0.5),
     radius: correctDistance,
@@ -44,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   static final Circle checkDoneCircle = Circle(
-    circleId: CircleId('checkDoneCircle'),
+    circleId: const CircleId('checkDoneCircle'),
     center: destinationLatlng,
     fillColor: Colors.greenAccent.withOpacity(0.5),
     radius: correctDistance,
@@ -53,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   static final Marker marker =
-      Marker(markerId: MarkerId('markerId'), position: destinationLatlng);
+      Marker(markerId: const MarkerId('markerId'), position: destinationLatlng);
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         future: checkPermission(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           // print(snapshot);
           // print(snapshot.data);
@@ -87,11 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     final start = snapshot.data;
                     final end = destinationLatlng;
 
-                    final distance = Geolocator.distanceBetween(
-                        start!.latitude,
-                        start.longitude,
-                        end.latitude,
-                        end.longitude);
+                    final distance = Geolocator.distanceBetween(start!.latitude,
+                        start.longitude, end.latitude, end.longitude);
 
                     print('current and destination distance => $distance ');
 
@@ -106,12 +105,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       _CustomGoogleMap(
                           inittialCameraPosition: initialCameraPosition,
                           // 출근할 거리에 따라서 다른원 출력
-                          circle: isWithinRange
-                              ? withDistance
-                              : notWithDistanceCircle,
+                          circle: choolCheckDone
+                              ? checkDoneCircle
+                              : isWithinRange
+                                  ? withDistance
+                                  : notWithDistanceCircle,
                           marker: marker),
                       _ChoolCheckButton(
                         isWithinRange: isWithinRange,
+                        onPressed: onChoolCheckPressed,
+                        choolCheckDone: choolCheckDone,
                       )
                     ],
                   );
@@ -124,6 +127,36 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     );
+  }
+
+  onChoolCheckPressed() async {
+    final choolCheckResult = await showDialog(
+        context: context,
+        builder: (_) {
+          // dialog를 만드는 최적화된 위젯
+          return AlertDialog(
+            title: const Text('출근하기'),
+            content: const Text('출근하시겠습니까?'),
+            // 선택할 수 있는 버튼들
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: const Text('취소')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: const Text('출근하기')),
+            ],
+          );
+        });
+    if (choolCheckResult != null) {
+      setState(() {
+        choolCheckDone = choolCheckResult;
+      });
+    }
   }
 
   Future<String> checkPermission() async {
@@ -155,10 +188,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _ChoolCheckButton extends StatelessWidget {
   final bool isWithinRange;
+  final VoidCallback onPressed;
+  final bool choolCheckDone;
 
   const _ChoolCheckButton({
     Key? key,
     required this.isWithinRange,
+    required this.onPressed,
+    required this.choolCheckDone,
   }) : super(key: key);
 
   @override
@@ -168,14 +205,9 @@ class _ChoolCheckButton extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.timelapse_outlined,
-            size: 50.0, color: isWithinRange ? Colors.blue : Colors.red),
-        SizedBox(height: 20),
-        if(isWithinRange)
-        TextButton(
-            onPressed: () {
-              print('출근 완료');
-            },
-            child: Text('출근하기'))
+            size: 50.0, color: choolCheckDone ? Colors.green : isWithinRange ? Colors.blue : Colors.red),
+        const SizedBox(height: 20),
+        if (isWithinRange && !choolCheckDone) TextButton(onPressed: onPressed, child: const Text('출근하기'))
       ],
     ));
   }
@@ -216,7 +248,7 @@ class _CustomGoogleMap extends StatelessWidget {
 AppBar renderAppBar() {
   return AppBar(
     centerTitle: true,
-    title: Text(
+    title: const Text(
       '출첵',
       style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w700),
     ),
