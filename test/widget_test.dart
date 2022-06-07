@@ -5,11 +5,14 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
 
-import 'package:go_to_wark/main.dart';
 
 void main() {
+  test('show my location LatLng ', (){
+    final currentLngLng = Geolocator.getPositionStream();
 
+    expect(currentLngLng, Position);
+  });
 }

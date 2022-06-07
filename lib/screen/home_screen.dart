@@ -2,14 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class LatLong {
-  final double latitude;
-  final double longitude;
-
-  LatLong({required this.latitude,required this.longitude});
-
-}
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -24,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
       LatLng(36.325256195490816, 127.4197022192119);
   static final LatLng destinationLatlng =
       LatLng(36.31795619547721, 127.4197022191111);
-  static final CameraPosition inittialCameraPosition =
+  static final CameraPosition initialCameraPosition =
       CameraPosition(target: currentLatlng, zoom: 15);
   static final double correctDistance = 100;
 
@@ -43,30 +35,20 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   static final Circle notWithDistanceCircle = Circle(
-    // 서클의 고유번호
     circleId: CircleId('notWithDistanceCircle'),
-    // 서클의 위치
     center: destinationLatlng,
-    // 서클 색
     fillColor: Colors.redAccent.withOpacity(0.5),
     radius: correctDistance,
-    // 서클의 경게 색
     strokeColor: Colors.red,
-    // 경계 두께
     strokeWidth: 1,
   );
 
   static final Circle checkDoneCircle = Circle(
-    // 서클의 고유번호
     circleId: CircleId('checkDoneCircle'),
-    // 서클의 위치
     center: destinationLatlng,
-    // 서클 색
     fillColor: Colors.greenAccent.withOpacity(0.5),
     radius: correctDistance,
-    // 서클의 경게 색
     strokeColor: Colors.green,
-    // 경계 두께
     strokeWidth: 1,
   );
 
@@ -86,13 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
-          print(snapshot);
-          print(snapshot.data);
+          // print(snapshot);
+          // print(snapshot.data);
           // none(future를 리턴하지않음), waiting(async 기다림), done(완료)
-          print(snapshot.connectionState);
+          // print(snapshot.connectionState);
           if (snapshot.data == '위치 권한이 허가되었습니다.') {
-            return Column(children: [
-              StreamBuilder<Position>(
+            return StreamBuilder<Position>(
                 // 권한을 받았기 때문에 위치를 가져옴
                 stream: Geolocator.getPositionStream(),
                 builder: (context, snapshot) {
@@ -107,26 +88,34 @@ class _HomeScreenState extends State<HomeScreen> {
                     final end = destinationLatlng;
 
                     final distance = Geolocator.distanceBetween(
-                        start!.latitude, start.longitude, end.latitude, end.longitude);
+                        start!.latitude,
+                        start.longitude,
+                        end.latitude,
+                        end.longitude);
 
-                    print(distance);
+                    print('current and destination distance => $distance ');
 
                     // 100m 안에있다면 true
-                    if(distance < correctDistance){
+                    if (distance < correctDistance) {
                       isWithinRange = true;
                     }
                   }
 
-
-                  return _CustomGoogleMap(
-                      inittialCameraPosition: inittialCameraPosition,
-                      // 출근할 거리에 따라서 다른원 출력
-                      circle: isWithinRange ? withDistance : notWithDistanceCircle,
-                      marker: marker);
-                }
-              ),
-              _ChollCheck()
-            ]);
+                  return Column(
+                    children: [
+                      _CustomGoogleMap(
+                          inittialCameraPosition: initialCameraPosition,
+                          // 출근할 거리에 따라서 다른원 출력
+                          circle: isWithinRange
+                              ? withDistance
+                              : notWithDistanceCircle,
+                          marker: marker),
+                      _ChoolCheckButton(
+                        isWithinRange: isWithinRange,
+                      )
+                    ],
+                  );
+                });
           } else {
             return Center(
               child: Text(snapshot.data.toString()),
@@ -164,14 +153,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _ChollCheck extends StatelessWidget {
-  const _ChollCheck({
+class _ChoolCheckButton extends StatelessWidget {
+  final bool isWithinRange;
+
+  const _ChoolCheckButton({
     Key? key,
+    required this.isWithinRange,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(flex: 1, child: Text('출근'));
+    return Expanded(
+        child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.timelapse_outlined,
+            size: 50.0, color: isWithinRange ? Colors.blue : Colors.red),
+        SizedBox(height: 20),
+        if(isWithinRange)
+        TextButton(
+            onPressed: () {
+              print('출근 완료');
+            },
+            child: Text('출근하기'))
+      ],
+    ));
   }
 }
 
@@ -211,8 +217,8 @@ AppBar renderAppBar() {
   return AppBar(
     centerTitle: true,
     title: Text(
-      '오늘도 출근',
-      style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w700),
+      '출첵',
+      style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w700),
     ),
     backgroundColor: Colors.white,
   );
