@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // latitude - 위도, longitude - 경도
 
   static final LatLng currentLatlng =
-      const LatLng(36.325256195490816, 127.4197022192119);
+      const LatLng(36.317956, 127.419702);
   static final LatLng destinationLatlng =
       const LatLng(36.31795619547721, 127.4197022191111);
   static final CameraPosition initialCameraPosition =
@@ -81,8 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 stream: Geolocator.getPositionStream(),
                 builder: (context, snapshot) {
                   // 위치가 바뀔때 마다 화면을 재렌더링한다
-                  print('streamBuilder =>  ${snapshot.data}');
-
                   bool isWithinRange = false;
 
                   if (snapshot.hasData) {
@@ -170,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return AppBar(
       centerTitle: true,
       title: const Text(
-        '출첵',
+        '출근관리',
         style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w700),
       ),
       actions: [
