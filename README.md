@@ -13,7 +13,9 @@ GoogleMaps를 곁들인 위치를 이용한 출근관리 앱입니다.
 
 ### 📖 Review
 FutureBuilder와 StreamBuilder의 적절한 사용법을 알 수 있었다.
+
 FutureBuilder는 Future 함수의 반환값이 에러 혹은 다른 값으로 할당될 때 AsyncSnapShot 객체로 재랜더링 할 수 있다.
+
 StreamBuilder 또한 Stream을 반환받는 함수의 반환값이 바뀔때 마다 재랜더링 할 수 있다.
 
 GoogleMaps를 보조해주는 Geolocator 플러그인 기능이 정말 좋았다.
