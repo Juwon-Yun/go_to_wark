@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool choolCheckDone = false;
+  GoogleMapController? mapController;
 
   // latitude - 위도, longitude - 경도
 
@@ -103,14 +104,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Column(
                     children: [
                       _CustomGoogleMap(
-                          inittialCameraPosition: initialCameraPosition,
+                          initialCameraPosition: initialCameraPosition,
                           // 출근할 거리에 따라서 다른원 출력
                           circle: choolCheckDone
                               ? checkDoneCircle
                               : isWithinRange
                                   ? withDistance
                                   : notWithDistanceCircle,
-                          marker: marker),
+                          marker: marker,
+                          onMapCreated: onMapCreated),
                       _ChoolCheckButton(
                         isWithinRange: isWithinRange,
                         onPressed: onChoolCheckPressed,
@@ -127,6 +129,11 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     );
+  }
+
+  onMapCreated(GoogleMapController controller) {
+    // UI변경이 없으니 setState 안한다.
+    mapController = controller;
   }
 
   onChoolCheckPressed() async {
@@ -157,6 +164,35 @@ class _HomeScreenState extends State<HomeScreen> {
         choolCheckDone = choolCheckResult;
       });
     }
+  }
+
+  AppBar renderAppBar() {
+    return AppBar(
+      centerTitle: true,
+      title: const Text(
+        '출첵',
+        style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w700),
+      ),
+      actions: [
+        IconButton(
+          onPressed: () async {
+            if (mapController == null) return;
+
+            // 한번만 가져오면되기 때문에 Stream이 아닌 Future를 리턴하는걸 씀
+            final location = await Geolocator.getCurrentPosition(
+                timeLimit: Duration(seconds: 3),
+                desiredAccuracy: LocationAccuracy.low,
+            );
+
+            mapController!.animateCamera(CameraUpdate.newLatLng(
+                LatLng(location.latitude, location.longitude)));
+          },
+          icon: Icon(Icons.my_location),
+          color: Colors.blue,
+        )
+      ],
+      backgroundColor: Colors.white,
+    );
   }
 
   Future<String> checkPermission() async {
@@ -205,9 +241,15 @@ class _ChoolCheckButton extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.timelapse_outlined,
-            size: 50.0, color: choolCheckDone ? Colors.green : isWithinRange ? Colors.blue : Colors.red),
+            size: 50.0,
+            color: choolCheckDone
+                ? Colors.green
+                : isWithinRange
+                    ? Colors.blue
+                    : Colors.red),
         const SizedBox(height: 20),
-        if (isWithinRange && !choolCheckDone) TextButton(onPressed: onPressed, child: const Text('출근하기'))
+        if (isWithinRange && !choolCheckDone)
+          TextButton(onPressed: onPressed, child: const Text('출근하기'))
       ],
     ));
   }
@@ -216,15 +258,17 @@ class _ChoolCheckButton extends StatelessWidget {
 class _CustomGoogleMap extends StatelessWidget {
   final Circle circle;
   final Marker marker;
+  final MapCreatedCallback onMapCreated;
 
   const _CustomGoogleMap({
     Key? key,
-    required this.inittialCameraPosition,
+    required this.initialCameraPosition,
     required this.circle,
     required this.marker,
+    required this.onMapCreated,
   }) : super(key: key);
 
-  final CameraPosition inittialCameraPosition;
+  final CameraPosition initialCameraPosition;
 
   @override
   Widget build(BuildContext context) {
@@ -232,7 +276,7 @@ class _CustomGoogleMap extends StatelessWidget {
       flex: 2,
       child: GoogleMap(
         mapType: MapType.normal,
-        initialCameraPosition: inittialCameraPosition,
+        initialCameraPosition: initialCameraPosition,
         // 내위치 아이콘
         myLocationEnabled: true,
         // 내위치로 돌아가는 floating button
@@ -240,18 +284,8 @@ class _CustomGoogleMap extends StatelessWidget {
         // 여기서 원의 고유번호
         circles: Set.from([circle]),
         markers: Set.from([marker]),
+        onMapCreated: onMapCreated,
       ),
     );
   }
-}
-
-AppBar renderAppBar() {
-  return AppBar(
-    centerTitle: true,
-    title: const Text(
-      '출첵',
-      style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w700),
-    ),
-    backgroundColor: Colors.white,
-  );
 }
